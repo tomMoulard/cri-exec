@@ -15,10 +15,10 @@ test:
 	$(CC) $(CFLAGS) -lcriterion $(TDEP) -o $(TBIN)
 
 check:
-	make a && make t
+	make a && make ARGS=" --verbose -j1 --full-stats" t
 
 t:
-	make test && ./$(TBIN)
+	make test && ./$(TBIN) $(ARGS)
 
 a:
 	make clean && make
