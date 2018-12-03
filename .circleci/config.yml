@@ -10,7 +10,7 @@ jobs:
           command: cd vswitch && ./configure
       - run:
           name: Unit tests
-          command: cd vswitch && echo "test"
+          command: cd vswitch && make check
       - run:
           name: Shutting down
           command: cd vswitch && ./shutdown
