@@ -1,16 +1,16 @@
 version: 2
 jobs:
-  build:
-    docker:
-      - image: tommoulard/criterion:latest
-    steps:
-      - checkout
-      - run:
-        name: setting up
-        command: cd vswitch && ./configure
-      - run:
-        name: Unit tests
-        command: cd vswitch && echo "toto"
-      - run:
-        name: shutting down
-        command: cd vswitch && ./shutdown
+    build:
+        docker:
+            - image: tommoulard/criterion:latest
+              steps:
+                  - checkout
+                  - run:
+                      name: setting up
+                      command: cd vswitch && ./configure
+                  - run:
+                      name: Unit tests
+                      command: cd vswitch && echo "toto"
+                  - run:
+                      name: shutting down
+                      command: cd vswitch && ./shutdown
