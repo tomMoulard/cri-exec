@@ -3,7 +3,7 @@ QEMU_ARGS := -enable-kvm -m 1024
 QEMU_EXTRA_ARGS :=
 
 ISO_NAME := debian-9.3.0-amd64-netinst.iso
-ISO_URI := "https://gemmei.ftp.acc.umu.se/debian-cd/current/amd64/iso-cd/debian-9.3.0-amd64-netinst.iso"
+ISO_URI := "https://ftp.acc.umu.se/debian-cd/current/amd64/iso-cd/debian-9.6.0-amd64-netinst.iso"
 SHA1SUM_URI := "https://ftp.acc.umu.se/debian-cd/current/amd64/iso-cd/SHA1SUMS"
 
 all: _base
