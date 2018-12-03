@@ -1,0 +1,74 @@
+Prérequis
+---------
+
+Vous devez avoir VDE et QEMU installés sur votre machine. Pour info, voici les
+noms de paquets Archlinux correspondants :
+
+  - qemu
+  - vde2
+
+Ils sont normalement disponibles sur le PIE pour toute machine nouvellement
+démarée.
+
+
+Utilisation du Makefile
+-----------------------
+
+Le Makefile fourni permet de générer des VM à partir d'une image de base. la
+cible à lancer se nomme « NAME.vm » où « NAME » correspond au nom de votre
+VM, par exemple :
+
+  $ make test.vm
+
+Au premier lancement, l'ISO de l'installeur Debian sera téléchargé et une VM
+sera lancée pour installer une image de base qui sera copiée pour chaque
+nouvelle VM.
+
+Pour recréer l'image de base, il suffit de lancer :
+
+  $ rm _base
+  $ make
+
+Toutes les VM auront une interface réseau reliée à un réseau interne
+inaccesible depuis l'hôte.
+
+La cible spéciale « gate.vm » lance une VM possédant deux interfaces réseaux,
+l'une reliée à l'hôte, qui lui donne accès à internet et l'autre dans le réseau
+interne :
+
+  $ make gate.vm
+
+/!\ NE LANCEZ PAS PLUSIEURS FOIS ET SIMULTANÉMENT LA MÊME VM /!\
+
+
+Installation de Debian
+----------------------
+
+Vous pouvez utiliser la quasi intégralité des réglages par défaut de
+l'installeur. Veillez à bien choisir « France » comme pays afin d'être sur le
+bon fuseau horaire.
+
+Il n'est pas nécessaire de garder le « Debian desktop environment » qui va
+considérablement rallonger le temps d'installation, les seuls paquets utiles
+sont « SSH server » et « Standard system utilities ».
+
+Une fois l'installation terminée, il est important de supprimer le contenu du
+fichier « /etc/machine-id » pour s'éviter des problèmes avec l'utilisation d'un
+éventuel serveur DHCP :
+
+  # echo > /etc/machine-id
+  # rm /var/lib/dbus/machine-id
+
+Pour vous faciliter la vie, vous pouvez retirer le mot de passe associé au
+compte « root »:
+
+  # passwd -d root
+
+Vous pouvez installer quelques paquets utiles :
+
+  # apt install vim tmux htop tcpdump
+
+Enfin, vous pouvez éteindre proprement la VM :
+
+  # poweroff
+
