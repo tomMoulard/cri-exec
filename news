@@ -1,0 +1,165 @@
+Bonjour à toutes et à tous,
+
+Des exercices de préparation au recrutement CRI ont été postés dans
+cri.exercices. N'hésitez pas à les faire que vous candidatiez au CRI ou
+pas.
+
+Un Makefile et un README expliquant comment l'utiliser figurent en
+pièce-jointe. Ce Makefile automatise la création de VM, il vous aidera à
+avoir rapidement un environnement dans lequel vous pourrez expérimenter.
+
+/!\ LISEZ ATTENTIVEMENT L'INTÉGRALITÉ DU README /!\
+
+Les bug report au sujet de ce Makefile doivent être envoyés par ticket
+au CRI avec dans l'objet les tags « [EXERCICES][MAKEFILE] ».
+
+Des questions concernant les exercices peuvent être postées dans
+cri.exercices en réponse directe à la news de l'exercice concerné.
+
+Une fois arrivé au bout des exercices, vous pouvez demander par ticket à
+ce qu'il en soit ajoutés de nouveaux, utilisez les tags
+« [EXERCICES][REQUEST] » dans votre demande.
+
+
+Bonne chance,
+
+-- 
+Marin Hannache
+EPITA - CRI
+
+
+Makefile
+
+QEMU := qemu-system-x86_64
+QEMU_ARGS := -enable-kvm -m 1024
+QEMU_EXTRA_ARGS :=
+
+ISO_NAME := debian-9.3.0-amd64-netinst.iso
+ISO_URI := "https://gemmei.ftp.acc.umu.se/debian-cd/current/amd64/iso-cd/debian-9.3.0-amd64-netinst.iso"
+SHA1SUM_URI := "https://ftp.acc.umu.se/debian-cd/current/amd64/iso-cd/SHA1SUMS"
+
+all: _base
+
+SHA1SUM:
+ @echo Downloading $@...
+ @wget --no-verbose --show-progress -cO "$@" $(SHA1SUM_URI)
+
+$(ISO_NAME): SHA1SUM
+ @echo Downloading $@...
+ @wget --no-verbose --show-progress -cO "$@" $(ISO_URI)
+ @touch "$@" # SHA1SUM was generated later but is a dependency
+ @echo Verifying checksum...
+ @sha1sum -c "$<" --ignore-missing
+
+
+_base: $(ISO_NAME)
+ @echo Creating base image file...
+ @truncate -s 20G "$@"
+ @echo Starting VM...
+ @${QEMU} ${QEMU_ARGS} -drive file="$@",format=raw -cdrom "$<"
+
+%.img: _base
+ @echo Copying base image...
+ @cp "$<" "$@"
+ @echo [!] Do not forget to edit /etc/hostname and /etc/hosts
+
+vde/ctl:
+ @echo Starting VDE switch...
+ @vde_switch -Fds vde
+ @echo [!] Do not forget to run \'killall vde_switch\' when you are done.
+
+gate.vm: QEMU_EXTRA_ARGS := -netdev user,id=uplink,hostfwd=tcp:127.0.0.1:8081-:80 \
+                     -device e1000,netdev=uplink
+
+%.vm: %.img vde/ctl
+ @${QEMU} ${QEMU_ARGS} -drive file="$<",format=raw \
+  -daemonize $(QEMU_EXTRA_ARGS) \
+  -netdev vde,id=int1,sock=vde \
+  -device e1000,netdev=int1,mac=`printf '52:54:00:EF:%02X:%02X' $$((RANDOM%256)) $$((RANDOM%256))`
+
+clean:
+ @echo Cleaning...
+ @rm -rf $(DISTCLEAN_FILES) _base *.img
+
+distclean: clean
+distclean: DISTCLEAN_FILES := SHA1SUM $(ISO_NAME) vde/
+
+.PHONY: all clean distclean
+.PRECIOUS: _base %.img
+
+
+README
+
+PrÃ©requis
+---------
+
+Vous devez avoir VDE et QEMU installÃ©s sur votre machine. Pour info, voici les
+noms de paquets Archlinux correspondants :
+
+  - qemu
+  - vde2
+
+Ils sont normalement disponibles sur le PIE pour toute machine nouvellement
+dÃ©marÃ©e.
+
+
+Utilisation du Makefile
+-----------------------
+
+Le Makefile fourni permet de gÃ©nÃ©rer des VM Ã  partir d'une image de base. la
+cible Ã  lancer se nomme Â« NAME.vm Â» oÃ¹ Â« NAME Â» correspond au nom de votre
+VM, par exemple :
+
+  $ make test.vm
+
+Au premier lancement, l'ISO de l'installeur Debian sera tÃ©lÃ©chargÃ© et une VM
+sera lancÃ©e pour installer une image de base qui sera copiÃ©e pour chaque
+nouvelle VM.
+
+Pour recrÃ©er l'image de base, il suffit de lancer :
+
+  $ rm _base
+  $ make
+
+Toutes les VM auront une interface rÃ©seau reliÃ©e Ã  un rÃ©seau interne
+inaccesible depuis l'hÃ´te.
+
+La cible spÃ©ciale Â« gate.vm Â» lance une VM possÃ©dant deux interfaces rÃ©seaux,
+l'une reliÃ©e Ã  l'hÃ´te, qui lui donne accÃ¨s Ã  internet et l'autre dans le rÃ©seau
+interne :
+
+  $ make gate.vm
+
+/!\ NE LANCEZ PAS PLUSIEURS FOIS ET SIMULTANÃ‰MENT LA MÃŠME VM /!\
+
+
+Installation de Debian
+----------------------
+
+Vous pouvez utiliser la quasi intÃ©gralitÃ© des rÃ©glages par dÃ©faut de
+l'installeur. Veillez Ã  bien choisir Â« France Â» comme pays afin d'Ãªtre sur le
+bon fuseau horaire.
+
+Il n'est pas nÃ©cessaire de garder le Â« Debian desktop environment Â» qui va
+considÃ©rablement rallonger le temps d'installation, les seuls paquets utiles
+sont Â« SSH server Â» et Â« Standard system utilities Â».
+
+Une fois l'installation terminÃ©e, il est important de supprimer le contenu du
+fichier Â« /etc/machine-id Â» pour s'Ã©viter des problÃ¨mes avec l'utilisation d'un
+Ã©ventuel serveur DHCP :
+
+  # echo > /etc/machine-id
+  # rm /var/lib/dbus/machine-id
+
+Pour vous faciliter la vie, vous pouvez retirer le mot de passe associÃ© au
+compte Â« root Â»:
+
+  # passwd -d root
+
+Vous pouvez installer quelques paquets utiles :
+
+  # apt install vim tmux htop tcpdump
+
+Enfin, vous pouvez Ã©teindre proprement la VM :
+
+  # poweroff
